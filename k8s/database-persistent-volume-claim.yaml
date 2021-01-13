@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-persistent-volume-claim
+spec:
+  accessModes:
+  # read / write at single node
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+    # default storage path: $ kubectl get storageclass
+    # describe $ kubectl describe storageclass
+    # storageClassName
+
