@@ -73,3 +73,91 @@ create that use cmd - define config that [Master] known how to apply it
       # start at minikube
       $ minikube addons enable ingress
 
+### CICD work flow
+
+- create '.travis.yml'
+
+- create service account from gcloud
+
+      - set role: IAM > Service Account > set [Role: Kubernetes Engine Admin]
+
+      - download <serviceaccount-xx>.json
+
+- encrypt <serviceaccount-xx>.json
+
+      # use ruby container & install travis cli in it.
+      $ cd ../complex
+      $ docker run -it -v %cd%:/app ruby
+      
+      # install travis (# /app)
+      $ gem install travis
+
+### Set image version (practical)
+
+- get $Git_SHA
+
+      $ git rev-parse HEAD
+      # check $Git_SHA
+      $ git log
+
+- set image
+
+      $ docker build -t lasting/mutli-client:latest -t lasting/multi-client:$Git_SHA -f ./client/Dockerfile.dev ./client
+
+### Set secret
+
+- at cloud shell (config)
+
+      $ gcloud config set project <google-project-id>
+
+      $ gcloud config set compute/zone <location>
+
+      $ gcloud container clusters get-credentials <cluster-name>
+
+- create secret
+
+      $ kubectl create secret generic pgpassword --from-literal PGPASSWORD=mypgpassword
+
+### Install Helm
+
+- https://helm.sh/docs/intro/install/ > from script
+
+### Create Tiller
+
+- Create Service Account --namespace kube-system tiller
+
+      $ kubectl create serviceaccount --namespace kube-system tiller
+
+- Create a new clusterrolebinding with the role 'cluster-admin' and assign it to service account 'tiller'
+
+      $ kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+
+- Init helm
+
+      $ helm init --service-account tiller --upgrade
+
+### Helm V3 (removes the user of Tiller)
+
+1. Install Helm V3:
+      
+       $ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+      
+       $ chmod 700 get_helm.sh
+        
+       $ ./get_helm.sh
+
+2. Skip the commands run in the 'Create Tiller'
+
+3. Install Ingress-nginx
+
+       $ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+       $ helm install my-release ingress-nginx/ingress-nginx
+ 
+Important: manually upgrade your cluster to at least the verison specified
+
+    $ gcloud container clusters upgrade <YOUR_CLUSTER_NAME> --master --cluster-version 1.16
+
+### Structure
+
+Traffic -> Google cloud Load Balancer -> Load Balancer<Service> -> nginx<Deployment> + Ingress Config -> Multi ClusterIPs<Service>

@@ -1,0 +1,32 @@
+sudo: required
+services:
+  - docker
+env:
+  global:
+    - SHA=$(git rev-parse HEAD)
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+before install:
+  # encrypt service-account to travis-ci
+  - openssl xxx
+  # install google cloud sdk
+  - curl https://sdk.cloud.google.com | bash > /dev/null;
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud components update kubectl
+  # create a service account from gcloud (IAM > Service Account [Role: Kubernetes Engine Admin] > auto download locally)
+  - gcloud auth activate-service-account --key-file service-account.json
+  - gcloud config set project <google-project-id>
+  - gcloud config set compute/zone <location>
+  - gcloud container clusters get-credentials <cluster-name>
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker build -t lasting/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true lasting/react-test npm run test -- --coverage
+
+deploy:
+  provider: script
+  script: bash ./deploy.sh
+  on:
+    branch: master
+  
