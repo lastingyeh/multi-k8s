@@ -161,3 +161,16 @@ Important: manually upgrade your cluster to at least the verison specified
 ### Structure
 
 Traffic -> Google cloud Load Balancer -> Load Balancer<Service> -> nginx<Deployment> + Ingress Config -> Multi ClusterIPs<Service>
+
+### HTTPS Setup with kubernetes
+
+1. purchase domain name ($10 USD) 
+      
+      [google domain](https://domains.google.com/registrar/search)
+
+2. Cert Manager
+
+- Certificate ('secret' stored): Object describing details about the certificate that should be obtained
+
+- Issuer: Object telling cert manager where to get the certificate from
+
